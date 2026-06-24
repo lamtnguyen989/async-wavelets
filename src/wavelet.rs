@@ -5,7 +5,7 @@ use num_complex::{Complex64};
 ***/
 
 /// Normalization constant metric context
- #[derive(Clone, Copy)]
+ #[derive(Clone, Copy, Debug)]
 pub enum Normalization{
     L1, // Convention to use this
     L2
@@ -13,13 +13,13 @@ pub enum Normalization{
 
 /// Parameters deciding which wavelet within the Generalized Morse Wavelet family
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct GMW_Params
+pub struct GmwParams
 {
-    gamma:  f64,
-    beta:   f64,
+    pub gamma:  f64,
+    pub beta:   f64,
 }
 
-impl GMW_Params
+impl GmwParams
 {
     /// Constructor
     pub fn new(beta: f64, gamma: f64) -> Self {
@@ -28,10 +28,6 @@ impl GMW_Params
             gamma:  gamma
         }
     }
-
-    /// Getters
-    pub fn get_beta(&self) -> f64 {return self.beta;}
-    pub fn get_gamma(&self) -> f64 {return self.gamma;}
 
     /// Peak frequency of GMW based on the parameters
     pub fn peak_freq(&self) -> f64 {return (self.beta/self.gamma).powf(1.0/self.gamma);}
@@ -52,39 +48,58 @@ impl GMW_Params
     }
 }
 
-impl From<(f64, f64)> for GMW_Params {
+impl From<(f64, f64)> for GmwParams {
     fn from(tuple: (f64, f64)) -> Self {
         let (beta, gamma) = (tuple.0, tuple.1);
-        return GMW_Params::new(beta, gamma);
+        return GmwParams::new(beta, gamma);
     }
 }
 
 /// Actual Generalized Morse wavelet handler
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct GeneralizedMorseWavelet
 {
-    params: GMW_Params, // Parameter
-    alpha:  f64,        // Normalization constant
+    params: GmwParams,  // Parameters
+    alpha: f64,         // Normalization constant
+    scale_factor: f64,  // Scale factor based on metric context for computing coeffcient values 
 }
 
 impl GeneralizedMorseWavelet
 {
     /// Constructors
     pub fn new<P>(params: P, norm_type: Normalization) -> Self
-    where P: Into<GMW_Params>
+    where P: Into<GmwParams>
     {
-        let params: GMW_Params = params.into();
+        let params: GmwParams = params.into();
+        let scale_factor = match norm_type {
+            Normalization::L1 => 1.0,
+            Normalization::L2 => 0.5,
+        };
+
         return Self {
-            params: params,
-            alpha:  params.normalization_const(norm_type)
+            params:         params,
+            alpha:          params.normalization_const(norm_type),
+            scale_factor:   scale_factor,
         }
     }
 
-    /// Wavelet transform coefficient value via convolution in frequency space
-    pub fn value(&self, omega: f64, scale: f64) -> Complex64 {
+    /// Wavelet transform coefficient value via convolution in frequency space (i.e. a single scalogram value)
+    pub fn freq_coefficient_value(&self, omega: f64, scale: f64) -> Complex64 {
+        // Heaviside step function in action
         if omega <= 0.0 {
             return Complex64::new(0.0, 0.0);
         }
-        todo!();
+
+        // Scale angular frequency
+        let s_omega = scale * omega;
+
+        // Calculate unscaled value
+        let mut wavelet_value = s_omega.powf(self.params.beta) * f64::exp(-s_omega.powf(self.params.gamma));
+        wavelet_value *= self.alpha;    // Normalize the wavelet value
+
+        // Scale the coefficient value based on the metric context
+        wavelet_value *= scale.powf(self.scale_factor);
+
+        return Complex64::new(wavelet_value, 0.0);
     }
 }
