@@ -1,3 +1,7 @@
+mod wavelet;
+
+use wavelet::*;
+
 async fn say_hello() -> () {
     println!("Hello, world!");
 }
