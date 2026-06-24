@@ -12,7 +12,7 @@ pub struct GMW_Params
     beta:   f64,
 }
 
-impl GeneralizedMorseParams
+impl GMW_Params
 {
     /// Constructor
     pub fn new(beta: f64, gamma: f64) -> Self {
@@ -21,6 +21,10 @@ impl GeneralizedMorseParams
             gamma:  gamma
         }
     }
+
+    /// Getters
+    pub fn get_beta(&self) -> f64 {return self.beta;}
+    pub fn get_gamma(&self) -> f64 {return self.gamma;}
 }
 
 /// Normalization constant metric context
@@ -39,8 +43,27 @@ pub struct GeneralizedMorseWavelet
 
 impl GeneralizedMorseWavelet
 {
-    /// Constructor
+    /// Constructors
     pub fn new(param: GMW_Params, norm_type: Normalization) -> Self {
-        todo!();
+        return Self {
+            params: params,
+            alpha: calculate_normalization_const(&params, norm_type)
+        }
+    }
+
+    pub fn new(beta: f64, gamma: f64, norm_type: Normalization) -> Self {
+        params = GMW_Params::new(beta, gamma);
+        return Self {
+            params: params,
+            alpha: calculate_normalization_const(&params, norm_type)
+        }
+    }
+
+    /// Calculate normalization constant
+    fn calculate_normalization_const(&param: GMW_Params, norm_type: Normalization) -> f64 {
+        match norm_type {
+            Normalization::L1   => {todo!();},
+            Normalization::L2   => {todo!();},
+        }
     }
 }
