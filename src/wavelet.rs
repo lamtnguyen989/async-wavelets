@@ -47,7 +47,7 @@ impl GmwParams
             },
             Normalization::L2 => {
                 let z: f64 = (2.0*beta + 1.0) / gamma;
-                let norm_const_squared: f64 = gamma_function(z) / (gamma * 2.0_f64.powf(z));
+                let norm_const_squared: f64 = (2.0*std::f64::consts::PI*gamma*2.0_f64.powf(z)) / gamma_function(z);
                 return norm_const_squared.sqrt();
             },
         }
@@ -78,7 +78,7 @@ impl GeneralizedMorseWavelet
     {
         let params: GmwParams = params.into();
         let scale_exp = match norm_type {
-            Normalization::L1 => 1.0,
+            Normalization::L1 => 0.0,
             Normalization::L2 => 0.5,
         };
 
