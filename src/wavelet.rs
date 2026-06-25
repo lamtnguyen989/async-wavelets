@@ -1,4 +1,5 @@
 use num_complex::{Complex64};
+use statrs::function::gamma::gamma as gamma_function;
 
 /***
 *   Generalized Morse Wavelet
@@ -42,7 +43,9 @@ impl GmwParams
                 return c * (std::f64::consts::E*gamma / beta).powf(beta/gamma);
             },
             Normalization::L2 => {
-                todo!("Calculate L2 normalization constant");
+                let z: f64 = (2.0*beta + 1.0) / gamma;
+                let norm_const_squared: f64 = gamma_function(z) / (gamma * 2.0_f64.powf(z));
+                return norm_const_squared.sqrt();
             },
         }
     }
@@ -61,7 +64,7 @@ pub struct GeneralizedMorseWavelet
 {
     params: GmwParams,  // Parameters
     alpha: f64,         // Normalization constant
-    scale_factor: f64,  // Scale factor based on metric context for computing coeffcient values 
+    scale_exp: f64,  // Scale factor based on metric context for computing coeffcient values 
 }
 
 impl GeneralizedMorseWavelet
@@ -71,7 +74,7 @@ impl GeneralizedMorseWavelet
     where P: Into<GmwParams>
     {
         let params: GmwParams = params.into();
-        let scale_factor = match norm_type {
+        let scale_exp = match norm_type {
             Normalization::L1 => 1.0,
             Normalization::L2 => 0.5,
         };
@@ -79,7 +82,7 @@ impl GeneralizedMorseWavelet
         return Self {
             params:         params,
             alpha:          params.normalization_const(norm_type),
-            scale_factor:   scale_factor,
+            scale_exp:      scale_exp,
         }
     }
 
@@ -98,7 +101,7 @@ impl GeneralizedMorseWavelet
         wavelet_value *= self.alpha;    // Normalize the wavelet value
 
         // Scale the coefficient value based on the metric context
-        wavelet_value *= scale.powf(self.scale_factor);
+        wavelet_value *= scale.powf(self.scale_exp);
 
         return Complex64::new(wavelet_value, 0.0);
     }
