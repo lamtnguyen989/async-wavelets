@@ -13,7 +13,7 @@ pub enum Normalization{
 }
 
 /// Parameters deciding which wavelet within the Generalized Morse Wavelet family
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct GmwParams
 {
     pub gamma:  f64,
@@ -24,6 +24,9 @@ impl GmwParams
 {
     /// Constructor
     pub fn new(beta: f64, gamma: f64) -> Self {
+        // Parameters bounds assert (error checking impl later)
+        assert!(beta >= 0.0 && gamma >= 0.0, "Both beta and gamma parameters must be positive!");
+
         return Self {
             beta:   beta,
             gamma:  gamma
@@ -64,7 +67,7 @@ pub struct GeneralizedMorseWavelet
 {
     params: GmwParams,  // Parameters
     alpha: f64,         // Normalization constant
-    scale_exp: f64,  // Scale factor based on metric context for computing coeffcient values 
+    scale_exp: f64,     // Scale factor based on metric context for computing coeffcient values 
 }
 
 impl GeneralizedMorseWavelet
@@ -86,7 +89,7 @@ impl GeneralizedMorseWavelet
         }
     }
 
-    /// Wavelet transform coefficient value via convolution in frequency space (i.e. a single scalogram value)
+    /// Wavelet transform coefficient value via convolution in frequency space, not physical space 
     pub fn freq_coefficient_value(&self, omega: f64, scale: f64) -> Complex64 {
         // Heaviside step function in action
         if omega <= 0.0 {
