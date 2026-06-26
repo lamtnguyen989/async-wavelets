@@ -7,7 +7,7 @@ use statrs::function::gamma::gamma as gamma_function;
 
 /// Normalization constant metric context
  #[derive(Clone, Copy, Debug)]
-pub enum Normalization{
+pub enum Normalization {
     L1, // Convention to use this
     L2
 }
@@ -89,7 +89,7 @@ impl GeneralizedMorseWavelet
         }
     }
 
-    /// Wavelet transform coefficient value via convolution in frequency space, not physical space 
+    /// Wavelet transform coefficient value via convolution handled in frequency space
     pub fn freq_coefficient_value(&self, omega: f64, scale: f64) -> Complex64 {
         // Heaviside step function in action
         if omega <= 0.0 {
@@ -104,7 +104,12 @@ impl GeneralizedMorseWavelet
         wavelet_value *= self.alpha;    // Normalize the wavelet value
 
         // Scale the coefficient value based on the metric context
-        wavelet_value *= scale.powf(self.scale_exp);
+        match self.scale_exp {
+            0.5 => {wavelet_value *= scale.sqrt();},
+            0.0 => {},
+            _   => {wavelet_value *= scale.powf(self.scale_exp);}
+        }
+        
 
         return Complex64::new(wavelet_value, 0.0);
     }
