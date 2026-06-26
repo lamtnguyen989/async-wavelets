@@ -4,7 +4,7 @@ use tokio_stream::wrappers::{ReadDirStream};
 use tokio_stream::{StreamExt};
 
 /// Finding audio files with a specified directory (non-recursive)
-pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>>{
+pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
     // Initialize file paths container
     let mut file_paths: Vec<PathBuf> = vec![];
     
@@ -13,7 +13,7 @@ pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>>{
                         .with_context(|| format!("Can not read from: {}", dir.display()))?;
     let mut stream = ReadDirStream::new(read_dir);
 
-    // Accumulate audio files (based on extension cuz idk of a better way atm lol)
+    // Accumulate audio file paths (based on extension cuz idk of a better way atm lol)
     while let Some(entry) = stream.next().await {
         let entry = entry?;
         let entry_path = entry.path();

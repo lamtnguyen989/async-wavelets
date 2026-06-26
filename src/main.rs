@@ -1,5 +1,6 @@
 mod wavelet;
 mod source;
+mod transform;
 
 use anyhow::{Result};
 use std::path::{PathBuf};
@@ -7,6 +8,7 @@ use clap::{Parser};
 
 use wavelet::*;
 use source::*;
+use transform::*;
 
 /// CLI Args
 #[derive(Parser, Debug)]
