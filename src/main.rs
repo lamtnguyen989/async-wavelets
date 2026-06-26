@@ -1,10 +1,12 @@
 mod wavelet;
+mod source;
 
 use anyhow::{Result};
 use std::path::{PathBuf};
 use clap::{Parser};
 
 use wavelet::*;
+use source::*;
 
 /// CLI Args
 #[derive(Parser, Debug)]
@@ -56,6 +58,10 @@ async fn main() -> Result<()> {
         .beta.iter().zip(args.gamma.iter())
         .map(|(&b, &g)| {GeneralizedMorseWavelet::new((b, g), norm_metric)})
         .collect();
+
+    // Compute the scalograms 
+
+
 
     say_hello().await;
     

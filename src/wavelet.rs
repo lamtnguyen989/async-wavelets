@@ -104,7 +104,12 @@ impl GeneralizedMorseWavelet
         wavelet_value *= self.alpha;    // Normalize the wavelet value
 
         // Scale the coefficient value based on the metric context
-        wavelet_value *= scale.powf(self.scale_exp);
+        match self.scale_exp {
+            0.5 => {wavelet_value *= scale.sqrt();},
+            0.0 => {},
+            _   => {wavelet_value *= scale.powf(self.scale_exp);}
+        }
+        
 
         return Complex64::new(wavelet_value, 0.0);
     }
