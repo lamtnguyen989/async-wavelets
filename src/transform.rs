@@ -24,3 +24,46 @@ impl TransformConfig
         }
     }
 }
+
+/// Scalogram Row for Generalized Morse Wavelet
+#[derive(Debug, Copy, Clone)]
+pub struct GmwScaleRow
+{
+    pub scale_index:        f64,
+    pub scale:              f64,
+    pub frequency:          f64,
+    pub magnitude_squared:  f64,
+}
+
+impl GmwScaleRow
+{
+
+}
+
+
+/// Generalized Morse Wavelet Scalogram data container
+#[derive(Debug, Clone)]
+pub struct GmwScalogram
+{
+    // Metadata
+    pub name:               Option<String>,
+    pub params:             GmwParams,
+    pub sample_rate:        u32,
+    pub overlap_size:       usize,
+
+    // Index and offsets
+    pub scalogram_index:    usize,
+    pub time_offset:        usize,
+
+    // Data
+    pub rows:               Vec<GmwScaleRow>,
+}
+
+impl GmwScalogram
+{
+
+}
+
+pub async fn gmw_cwt() {
+    todo!();
+}
