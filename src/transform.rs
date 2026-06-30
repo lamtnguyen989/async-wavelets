@@ -25,14 +25,6 @@ impl TransformConfig
     }
 }
 
-/// Wave coefficient type (i.e. the type of values that will be computed for scalograms)
-#[derive(Debug, Clone)]
-pub enum WaveCoefficient
-{
-    Magnitude,  // |W(t,s)|
-    Power,      // |W(t,s)|^2
-}
-
 /// Scalogram Row for Generalized Morse Wavelet
 #[derive(Debug, Clone)]
 pub struct GmwScaleRow
@@ -73,6 +65,3 @@ impl GmwScalogram
 
 }
 
-pub async fn gmw_cwt() {
-    todo!();
-}
