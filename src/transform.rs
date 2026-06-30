@@ -24,3 +24,55 @@ impl TransformConfig
         }
     }
 }
+
+/// Wave coefficient type (i.e. the type of values that will be computed for scalograms)
+#[derive(Debug, Clone)]
+pub enum WaveCoefficient
+{
+    Magnitude,  // |W(t,s)|
+    Power,      // |W(t,s)|^2
+}
+
+/// Scalogram Row for Generalized Morse Wavelet
+#[derive(Debug, Clone)]
+pub struct GmwScaleRow
+{
+    pub scale_index:    f64,
+    pub scale:          f64,
+    pub frequency:      f64,
+    pub wave_coeff:     Vec<f64>,
+}
+
+impl GmwScaleRow
+{
+
+}
+
+
+/// Generalized Morse Wavelet Scalogram data container
+#[derive(Debug, Clone)]
+pub struct GmwScalogram
+{
+    // Metadata
+    pub name:               String,
+    pub params:             GmwParams,
+    pub sample_rate:        u32,
+    pub overlap_size:       usize,
+    pub coeff_type:         WaveCoefficient,
+
+    // Index and offsets
+    pub scalogram_index:    usize,
+    pub time_offset:        usize,
+
+    // Data
+    pub rows:               Vec<GmwScaleRow>,
+}
+
+impl GmwScalogram
+{
+
+}
+
+pub async fn gmw_cwt() {
+    todo!();
+}

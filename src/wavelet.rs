@@ -90,10 +90,11 @@ impl GeneralizedMorseWavelet
     }
 
     /// Wavelet transform coefficient value via convolution handled in frequency space
-    pub fn freq_coefficient_value(&self, omega: f64, scale: f64) -> Complex64 {
+    /// Technically, this is complex-valued, but with real parameters, this reduced to real-valued
+    pub fn freq_coefficient_value(&self, omega: f64, scale: f64) -> f64 {
         // Heaviside step function in action
         if omega <= 0.0 {
-            return Complex64::new(0.0, 0.0);
+            return 0.0;
         }
 
         // Scale angular frequency
@@ -110,7 +111,24 @@ impl GeneralizedMorseWavelet
             _   => {wavelet_value *= scale.powf(self.scale_exp);}
         }
         
+        // Morse Wavelet technically real-valued
+        return wavelet_value;
+    }
 
-        return Complex64::new(wavelet_value, 0.0);
+    /// Building the convolution filter in frequency space (real-valued to save space)
+    pub fn build_freq_filter(&self, fft_size: usize, scale: f64) -> Vec<f64> {
+        // Initialize the filter
+        let mut filter: Vec<f64> = vec![0.0; fft_size];
+
+        // Filling in filter value
+        // Note analyticity means negative frequencies are zero
+        let df = 2.0 * std::f64::consts::PI / fft_size as f64;
+        for k in (0..=fft_size / 2) {
+            let omega = df * k as f64;
+            filter[k] = self.freq_coefficient_value(omega, scale);
+        }
+
+        // Return the real-valued filter
+        return filter;
     }
 }

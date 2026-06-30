@@ -1,3 +1,4 @@
 soundfile 
 matplotlib 
 numpy
+h5py
