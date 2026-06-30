@@ -40,7 +40,29 @@ def linear_chirp(count: int, f_low: float, f_high: float, sample_rate: int = SAM
         for i in range(count)
     ]
 
+def exponential_chirp(count: int, f_low: float, f_high: float, sample_rate: int = SAMPLE_RATE) -> list[float]:
+    """
+    Exponential (logarithmic) chirp signal generation.
+    """
+    if f_low <= 0:
+        raise ValueError("f_low must be > 0 for an exponential chirp.")
+
+    t_end = count / sample_rate
+    ratio = f_high / f_low
+    log_ratio = math.log(ratio)
+
+    return [
+        math.sin(
+            2 * math.pi * (
+                f_low * t_end / log_ratio *
+                (ratio ** ((i / sample_rate) / t_end) - 1)
+            )
+        )
+        for i in range(count)
+    ]
+
 #%%
 if __name__ == "__main__":
     # Writing 10 seconds of chirp from 0 Hz to 10K Hz
-    write_wav("chirp_20_10000hz.wav", linear_chirp(SAMPLE_RATE * 10, 20.0, 10000.0))
+    write_wav("linear_chirp_20_10000hz.wav", linear_chirp(SAMPLE_RATE * 10, 20.0, 10000.0))
+    write_wav("exp_chirp_20_10000hz.wav", exponential_chirp(SAMPLE_RATE * 10, 20.0, 10000.0))
