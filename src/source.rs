@@ -6,6 +6,7 @@ use symphonia::core::codecs::{
     CodecParameters,
     audio::{AudioDecoder, AudioDecoderOptions},
 };
+use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 
 /// Finding audio files with a specified directory (non-recursive)
 pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
@@ -53,5 +54,23 @@ pub struct AudioStream
 
 impl AudioStream
 {
+    /// Start the audio stream from a file 
+    /// Most audio files needs to be decoded which is compute-heavy so sadly this needs to be synchronous :(
+    pub fn open(path: &Path) -> Result<Self> {
+        // Open file from path
+        let file = std::fs::File::open(path)
+                        .with_context(|| format!("Can not open {}", path.display()))?;
+        
+        // Turning opened file into an input stream
+        let mss = MediaSourceStream::new(Box::new(file), MediaSourceStreamOptions::default());
 
+        // Extract audio metadata
+
+        todo!();
+    }
+
+    /// Next data chunk from audio stream
+    pub fn next() {
+
+    }
 }
