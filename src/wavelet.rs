@@ -2,7 +2,7 @@ use num_complex::{Complex64};
 use statrs::function::gamma::gamma as gamma_function;
 
 /***
-*   Generalized Morse Wavelet
+*   Behavior macros
 ***/
 
 /// Normalization constant metric context
@@ -11,6 +11,18 @@ pub enum Normalization {
     L1, // Convention to use this
     L2
 }
+
+/// Wave coefficient type (i.e. the type of values that will be computed for scalograms)
+#[derive(Debug, Clone)]
+pub enum WaveCoefficient
+{
+    Magnitude,  // |W(t,s)|
+    Power,      // |W(t,s)|^2
+}
+
+/***
+*   Generalized Morse Wavelet
+***/
 
 /// Parameters deciding which wavelet within the Generalized Morse Wavelet family
 #[derive(Clone, Copy, Debug)]

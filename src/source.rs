@@ -2,6 +2,10 @@ use anyhow::{Result, Context};
 use std::path::{Path, PathBuf};
 use tokio_stream::wrappers::{ReadDirStream};
 use tokio_stream::{StreamExt};
+use symphonia::core::codecs::{
+    CodecParameters,
+    audio::{AudioDecoder, AudioDecoderOptions},
+};
 
 /// Finding audio files with a specified directory (non-recursive)
 pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
@@ -33,22 +37,21 @@ pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
 #[derive(Debug, Clone)]
 pub struct SignalInfo
 {
-    name: String,
-    path: Option<PathBuf>,
-    sample_rate: u32,
-    n_samples_hint: Option<usize>,  // Total sample size if known
+    pub name:           String,
+    pub path:           Option<PathBuf>,
+    pub sample_rate:    u32,
+    pub n_samples_hint: Option<usize>,  // Total sample size if known
 }
 
-impl SignalInfo
-{
-    // TODO: Do I want this to be struct or object?
-}
 
 /// Chunk of audio as f32 samples
-#[derive(Debug, Clone)]
-pub struct AudioChunk
+pub struct AudioStream
 {
-    pub offset: u32,
-    pub samples: Vec<f32>,
+    pub info: SignalInfo,
+    decoder: Box<dyn AudioDecoder>,
 }
 
+impl AudioStream
+{
+
+}
