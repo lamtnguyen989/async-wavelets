@@ -50,7 +50,7 @@ pub struct GmwScalogram
     pub params:             GmwParams,
     pub sample_rate:        u32,
     pub overlap_size:       usize,
-    pub coeff_type:         WaveCoefficient,
+    pub coeff_type:         WaveCoefficientType,
 
     // Index and offsets
     pub scalogram_index:    usize,

@@ -14,7 +14,7 @@ pub enum Normalization {
 
 /// Wave coefficient type (i.e. the type of values that will be computed for scalograms)
 #[derive(Debug, Clone)]
-pub enum WaveCoefficient
+pub enum WaveCoefficientType
 {
     Magnitude,  // |W(t,s)|
     Power,      // |W(t,s)|^2
