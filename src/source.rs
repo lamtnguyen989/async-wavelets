@@ -2,11 +2,17 @@ use anyhow::{Result, Context};
 use std::path::{Path, PathBuf};
 use tokio_stream::wrappers::{ReadDirStream};
 use tokio_stream::{StreamExt};
-use symphonia::core::codecs::{
-    CodecParameters,
-    audio::{AudioDecoder, AudioDecoderOptions},
-};
+
+use symphonia::core::codecs::{CodecParameters};
+use symphonia::core::codecs::registry::{CodecRegistry};
+use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions, CODEC_ID_NULL_AUDIO};
 use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
+use symphonia::core::formats::{FormatReader, FormatOptions};
+use symphonia::core::formats::probe::{Hint, Probe, ProbeOptions};
+use symphonia::core::meta::{MetadataOptions};
+use symphonia::core::errors::{Error as SymphoniaError};
+use symphonia::core::audio::{GenericAudioBufferRef};
+use symphonia::core::packet::{Packet};
 
 /// Finding audio files with a specified directory (non-recursive)
 pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
@@ -38,18 +44,31 @@ pub async fn fetch_audio_files(dir: &Path) -> Result<Vec<PathBuf>> {
 #[derive(Debug, Clone)]
 pub struct SignalInfo
 {
-    pub name:           String,
-    pub path:           Option<PathBuf>,
-    pub sample_rate:    u32,
-    pub n_samples_hint: Option<usize>,  // Total sample size if known
+    name:           String,
+    path:           Option<PathBuf>,
+    sample_rate:    u32,
+    n_samples:      u64,
+    n_channels:     u16,
+}
+
+impl SignalInfo
+{
+    // Metadata getters
+    pub fn get_name(&self) -> &str {return &self.name;}
+    pub fn get_path(&self) -> Option<&Path> {return self.path.as_deref();}
+    pub fn get_sample_rate(&self) -> u32 {return self.sample_rate;}
+    pub fn get_n_samples(&self) -> u64 {return self.n_samples;}
+    pub fn get_n_channels(&self) -> u16 {return self.n_channels;}
 }
 
 
-/// Chunk of audio as f32 samples
+/// Audio Stream from audio files
 pub struct AudioStream
 {
-    pub info: SignalInfo,
-    decoder: Box<dyn AudioDecoder>,
+    pub info:   SignalInfo,
+    decoder:    Box<dyn AudioDecoder>,
+    format:     Box<dyn FormatReader>,
+    track_id:   u32,
 }
 
 impl AudioStream
@@ -64,13 +83,89 @@ impl AudioStream
         // Turning opened file into an input stream
         let mss = MediaSourceStream::new(Box::new(file), MediaSourceStreamOptions::default());
 
-        // Extract audio metadata
+        // Adding file extension hint
+        let mut hint = Hint::new();
+        if let Some(extension) = path.extension().and_then(|ext| {ext.to_str()}) {
+            hint.with_extension(extension);
+        }
 
-        todo!();
+        // Probing the audio file
+        let probe = Probe::new_with_options(&ProbeOptions::default());
+        let format: Box<dyn FormatReader> = probe.probe(&hint, mss, FormatOptions::default(), MetadataOptions::default())
+                                                .with_context(|| {format!("Can not probe {}", path.display())})?;
+
+        // Find audio track from the format probe
+        let track = format.tracks().iter().find({
+            |t| {match &t.codec_params {
+                Some(CodecParameters::Audio(p)) => p.codec != CODEC_ID_NULL_AUDIO,    // Skipping sentinel audio codec ID
+                _ => false
+            }}
+        }).context("No audio tracks found")?;
+        
+        // Audio parameters  of the track
+        let audio_params = match &track.codec_params {
+            Some(CodecParameters::Audio(p)) => p,
+            _ => anyhow::bail!("Track is not an audio track"),
+        };
+        
+        // Extract audio metadata from track
+        let id: u32 = track.id;
+        let sample_rate = audio_params.sample_rate.context("Unknown sample rate!")?;
+        let n_frames = track.num_frames.context("Unknown track size!")?;
+        let name = path.file_stem().and_then(|s| s.to_str())
+                        .unwrap_or("Unknown file name").to_string();
+        let n_channels = audio_params.channels.as_ref()
+                                        .map(|c| c.count())
+                                        .unwrap_or(1);
+
+        // Decoder object
+        let audio_decoder: Box<dyn AudioDecoder> = CodecRegistry::new()
+                                                    .make_audio_decoder(audio_params, &AudioDecoderOptions::default())
+                                                    .context("Fail to create audio decoder")?;
+
+        return Ok(Self {
+            info: SignalInfo {
+                name:           name,
+                path:           Some(path.to_path_buf()),
+                sample_rate:    sample_rate,
+                n_samples:      n_frames,
+                n_channels:     n_channels as u16,
+            },
+            decoder:    audio_decoder,
+            format:     format,
+            track_id:   id
+        });
     }
 
-    /// Next data chunk from audio stream
-    pub fn next() {
+    /// Next data chunk from audio stream (as a collection of f32's, though subject to change for better usage)
+    pub fn next(&mut self) -> Result<Option<Vec<f32>>> {
+        loop {
+            // Grab the next packet
+            let packet: Packet = match self.format.next_packet() {
+                Ok(p) => p.unwrap(),
+                Err(SymphoniaError::ResetRequired) => {self.decoder.reset(); continue;},
+                Err(e) => {return Err(e.into());}
+            };
+            if packet.track_id != self.track_id {continue;}
 
+            // Decode the packet 
+            let decoded_packet = self.decoder.decode(&packet)?;
+            let samples: Vec<f32> = match decoded_packet {
+                _ => {todo!();}
+            };
+
+            return Ok(Some(samples));
+        }
     }
+}
+
+/// Iterator for implementing Overlap-Save fast convolution
+pub struct OverlapSaveIter
+{
+
+}
+
+impl OverlapSaveIter
+{
+
 }
