@@ -135,7 +135,7 @@ impl GeneralizedMorseWavelet
         // Filling in filter value
         // Note analyticity means negative frequencies are zero
         let df = 2.0 * std::f64::consts::PI / fft_size as f64;
-        for k in (0..=fft_size / 2) {
+        for k in 0..=fft_size/2 {
             let omega = df * k as f64;
             filter[k] = self.freq_coefficient_value(omega, scale);
         }
