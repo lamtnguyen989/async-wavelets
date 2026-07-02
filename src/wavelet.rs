@@ -77,9 +77,9 @@ impl From<(f64, f64)> for GmwParams {
 #[derive(Clone, Copy, Debug)]
 pub struct GeneralizedMorseWavelet
 {
-    params: GmwParams,  // Parameters
-    alpha: f64,         // Normalization constant
-    scale_exp: f64,     // Scale factor based on metric context for computing coeffcient values 
+    pub params: GmwParams,  // Parameters
+    alpha: f64,             // Normalization constant
+    scale_exp: f64,         // Scale factor based on metric context for computing coeffcient values 
 }
 
 impl GeneralizedMorseWavelet

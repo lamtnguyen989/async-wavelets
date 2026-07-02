@@ -35,7 +35,7 @@ struct Args
     freq_min: f32,
 
     // Max frequency considered for scalogram (in Hz)
-    #[arg(long, default_value_t=10000.0)]
+    #[arg(long, default_value_t=20000.0)]
     freq_max: f32,
 }
 

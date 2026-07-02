@@ -1,6 +1,9 @@
 use crate::wavelet::*;
 use crate::source::*;
 
+use std::sync::Arc;
+use rustfft::{Fft, FftPlanner};
+
 /// Configuration for running the Wavelet Transform pipeline
 /// The config is mainly to address memory usage issues nature of CWT in general
 #[derive(Copy, Clone, Debug)]
@@ -65,3 +68,38 @@ impl GmwScalogram
 
 }
 
+
+/// Convolution Filter for the Generalized Morse Wavelet
+/// Eventhough memory footprint expensive, it is build only once (lookup table)
+pub struct GmwFilter
+{
+    // Metadata to build filter
+    fft_size: usize,
+    overlap_size: usize,
+    sample_rate: u32,
+    period: f64,
+
+    // Data containers
+    scales: Vec<f64>,
+    frequencies: Vec<f64>,
+
+    // FFT plans
+    fft_fwd: Arc<dyn Fft<f64>>,
+    fft_inv: Arc<dyn Fft<f64>>,
+}
+
+impl GmwFilter
+{
+    pub fn new(
+        wavelet: &GeneralizedMorseWavelet,
+        freq_min: f64,
+        freq_max: f64,
+        sample_rate: f64,
+        fft_size: usize,
+        n_scales: usize,
+    ) -> Self {
+        let peak_freq = wavelet.params.peak_freq();
+
+        todo!("Implement the constructor!");
+    }
+}
