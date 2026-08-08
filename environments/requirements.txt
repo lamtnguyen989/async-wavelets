@@ -1,4 +1,6 @@
 soundfile 
 matplotlib 
 numpy
-h5py
+jax[cuda13]
+iree-base-compiler
+iree-base-runtime

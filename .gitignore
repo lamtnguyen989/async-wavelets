@@ -1,2 +1,4 @@
 /target
 .venv/
+output/
+**/__pycache__/
