@@ -1,7 +1,13 @@
+use std::sync::OnceLock;
+use std::ffi::CString;
+use std::todo;
+
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
+use pyo3::ffi::c_str;
 
 const WAVELET_SOURCE: &str = include_str!("morse_wavelet.py");
+static CWT_MODULE: OnceLock<Py<PyModule>> = OnceLock::new();
 
 /// Wavelet Analysis Parameters
 #[derive(Debug, Clone, Copy)]
@@ -48,4 +54,23 @@ impl From<PyErr> for EngineError {
     fn from(e: PyErr) -> Self {
         EngineError::Python(e.to_string())
     }
+}
+
+/// Loading JAX Wavelet python source as a module
+fn wavelet_module(py: Python<'_>) -> PyResult<&Bound<'_, PyModule>>
+{
+    let source = CString::new(WAVELET_SOURCE).expect("Fail to read the Python wavelet source code!");
+
+    let module = CWT_MODULE.get_or_init(|| {
+        PyModule::from_code(py, &source, c_str!("morse_wavelet.py"), c_str!("cwt"))
+            .expect("Fail to load JAX source as an embedded Python module")
+            .unbind()
+    });
+
+    return Ok(module.bind(py));
+}
+
+pub fn compute_scalogram() 
+{
+    todo!();
 }
