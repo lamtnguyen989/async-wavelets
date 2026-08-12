@@ -1,6 +1,0 @@
-soundfile 
-matplotlib 
-numpy
-jax[cuda13]
-iree-base-compiler
-iree-base-runtime
