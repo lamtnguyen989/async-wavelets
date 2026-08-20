@@ -4,7 +4,7 @@ mod cwt;
 use axum::extract::{DefaultBodyLimit, Multipart};
 
 
-const MAX_UPLOAD_BYTES: usize = 40 * 1024 * 1024;  // 40 MB
+const MAX_UPLOAD_BYTES: usize = 5 * 1024 * 1024;  // 5 MB
 const PORT: &str = "7777";
 
 #[tokio::main]

@@ -3,7 +3,7 @@ use std::ffi::CString;
 use std::todo;
 
 use pyo3::prelude::*;
-use pyo3::types::PyTuple;
+use pyo3::types::{PyDict, PyTuple};
 use pyo3::ffi::c_str;
 
 const WAVELET_SOURCE: &str = include_str!("morse_wavelet.py");
@@ -70,7 +70,17 @@ fn wavelet_module(py: Python<'_>) -> PyResult<&Bound<'_, PyModule>>
     return Ok(module.bind(py));
 }
 
-pub fn compute_scalogram() 
+
+/// Plotting the scalogram with JAX from the Python script
+pub fn compute_scalogram(
+    audio_signal: &[f32], 
+    sr: u32, 
+    f_min: f32, 
+    f_max: f32,
+    n_scales: u32, 
+    beta: f32, 
+    gamma: f32
+) -> Option<ScalogramResult>
 {
     todo!();
 }
