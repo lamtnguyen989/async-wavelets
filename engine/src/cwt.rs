@@ -36,12 +36,9 @@ impl Default for AnalysisParams {
 
 /// Struct storing scalogram result data in Row-major layout: [n_scales x n_time]
 pub struct ScalogramResult {
-    pub magnitude: Vec<f32>,
-    pub n_scales: usize,
-    pub n_time: usize,
-    pub frequencies_hz: Vec<f32>,
-    pub time_seconds: Vec<f32>,
-    pub max_magnitude: f32,
+    pub image: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
 }
 
 #[derive(Debug, thiserror::Error)]

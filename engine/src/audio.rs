@@ -5,7 +5,7 @@ use std::{hint, todo};
 
 use symphonia::core::errors::Error::ResetRequired;
 use symphonia::core::audio::GenericAudioBufferRef;
-use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions, CODEC_ID_NULL_AUDIO};
+use symphonia::core::codecs::audio::{AudioCodecId, AudioDecoder, AudioDecoderOptions, CODEC_ID_NULL_AUDIO};
 use symphonia::core::codecs::registry::CodecRegistry;
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::errors::Error as SymphoniaError;
@@ -47,7 +47,7 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
     let mss = MediaSourceStream::new(Box::new(cursor), mss_options);
 
     // Probing the input
-    let mut probe = Probe::default();
+    let mut probe = symphonia::default::get_probe();
     let hint = Hint::new();
     let meta_opts = MetadataOptions::default();
     let format_opts = FormatOptions::default();
@@ -76,7 +76,7 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
         .unwrap_or(1);
 
     // Initialize the codec (decoder)
-    let codec_registry = CodecRegistry::new();
+    let codec_registry = symphonia::default::get_codecs();
     let decoder_opts = AudioDecoderOptions::default();
     let mut decoder = codec_registry
         .make_audio_decoder(&audio_params, &decoder_opts)

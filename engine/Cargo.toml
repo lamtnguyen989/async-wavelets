@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.104"
 axum = {version = "0.8.9", features = ["multipart"]}
+numpy = "0.29.0"
 pyo3 = {version = "0.29.2", features = ["auto-initialize"]}
 serde = {version = "1.0.229", features = ["derive"]}
 serde_json = "1.0.151"
@@ -13,9 +14,11 @@ symphonia = {version = "0.6.0", features = ["mp3", "flac", "wav", "pcm"] }
 thiserror = "2.0.20"
 tokio = {version = "1.53.1", features = ["full"]}
 tonic = {version = "0.14.6", features = ["transport"]}
+tonic-prost = "0.14.6"
 tower-http = {version = "0.7.0", features = ["fs", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = {version = "0.3.23",  features = ["env-filter"]}
 
 [build-dependencies]
 tonic-build = "0.14.6"
+tonic-prost-build = "0.14.6"
