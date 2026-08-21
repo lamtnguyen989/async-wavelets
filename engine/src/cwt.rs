@@ -119,7 +119,7 @@ impl ProcessingService for WaveletServer {
         // Launching the JAX compute task
         let f_max = (sr as f32 / 2.0).min(15000.0);
         let f_min = 20.0;
-        let n_scales = 64;
+        let n_scales = 128;
         let (beta, gamma) = (3.0, 20.0);
 
         let compute_result = tokio::task::spawn_blocking(move || {

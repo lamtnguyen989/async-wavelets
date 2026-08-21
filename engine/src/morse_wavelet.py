@@ -6,7 +6,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import soundfile as sf
 
 ###
 # Morse Wavelet computation
@@ -88,6 +87,7 @@ def scalogram(
     gamma: float = 60.0,
     title: str = "Audio Scalogram",
     out_path: str = None,
+    return_bytes: bool = False,
 ):
     scales = log_scales(n_scales, f_min, f_max, beta=beta, gamma=gamma)
     freqs = np.asarray(scale_to_hz(scales, beta, gamma))

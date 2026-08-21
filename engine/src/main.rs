@@ -17,9 +17,12 @@ pub mod pb {
 
 const MAX_GRPC_MESSAGE_MB: usize = 16;  // Default is 4 MB so needs to pump those rookie numbers up
 const MAX_GRPC_MESSAGE_BYTES: usize = MAX_GRPC_MESSAGE_MB * 1024 * 1024;
+
 const ADDR: &str = "0.0.0.0:10000";
 const FRONTEND_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../frontend");
-const DEFAULT_PYTHON_SRC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), ".");   // For future-proofing of layout 
+const DEFAULT_PYTHON_SRC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/src");   // For future-proofing of layout 
+const PROTO_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../proto");
+
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> 
@@ -54,6 +57,7 @@ async fn main() -> anyhow::Result<()>
     let app = tonic_routes.routes()
             .into_axum_router()
             .layer(GrpcWebLayer::new())
+            .nest_service("/proto", ServeDir::new(PROTO_DIR))
             .fallback_service(ServeDir::new(FRONTEND_DIR));
 
     // Exposing service
