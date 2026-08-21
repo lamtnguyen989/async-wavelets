@@ -2,37 +2,12 @@ use std::sync::OnceLock;
 use std::ffi::CString;
 use std::todo;
 
+use anyhow::{anyhow, Result, Context};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3::ffi::c_str;
+use numpy::PyArray1;
 
-const WAVELET_SOURCE: &str = include_str!("morse_wavelet.py");
-static CWT_MODULE: OnceLock<Py<PyModule>> = OnceLock::new();
-
-/// Wavelet Analysis Parameters
-#[derive(Debug, Clone, Copy)]
-pub struct AnalysisParams 
-{
-    pub n_scales: u32,
-    pub f_min: f32,
-    pub f_max: f32,
-    pub beta: f32,
-    pub gamma: f32,
-    pub max_time_bins: u32,
-}
-
-impl Default for AnalysisParams {
-    fn default() -> Self {
-        return Self {
-            n_scales:       64,
-            f_min:          20.0,
-            f_max:          15000.0,
-            beta:           3.0,
-            gamma:          20.0,
-            max_time_bins:  1500,
-        }
-    }
-}
 
 /// Struct storing scalogram result data in Row-major layout: [n_scales x n_time]
 pub struct ScalogramResult {
@@ -41,30 +16,27 @@ pub struct ScalogramResult {
     pub height: u32,
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum EngineError {
-    #[error("python error: {0}")]
-    Python(String),
-}
-
-impl From<PyErr> for EngineError {
-    fn from(e: PyErr) -> Self {
-        EngineError::Python(e.to_string())
-    }
-}
-
-/// Loading JAX Wavelet python source as a module
-fn wavelet_module(py: Python<'_>) -> PyResult<&Bound<'_, PyModule>>
+/// Initalize Python module 
+pub fn init_wavelet_python_module(python_src_dir: &str) -> Result<()>
 {
-    let source = CString::new(WAVELET_SOURCE).expect("Fail to read the Python wavelet source code!");
+    let py_init = Python::attach(|py| -> Result<()> {
+        // Check if the Python source directory is already in use, if not append
+        let sys = py.import("sys")?;
+        let sys_path = sys.getattr("path")?;
+        let dir_query = sys_path.call_method1("__contains__", (python_src_dir,))?;
+        let dir_present: bool = dir_query.extract()?;
+        if !dir_present {
+            sys_path.call_method1("insert", (python_src_dir, ))?;
+        }
 
-    let module = CWT_MODULE.get_or_init(|| {
-        PyModule::from_code(py, &source, c_str!("morse_wavelet.py"), c_str!("cwt"))
-            .expect("Fail to load JAX source as an embedded Python module")
-            .unbind()
+        // Import the Morse Wavelet module (probably need to incorporate more wavelets in the future)
+        let _ = Python::import(py, "morse_wavelet")
+                    .context("Importing wavelet transform module");
+        
+        Ok(())
     });
-
-    return Ok(module.bind(py));
+    
+    return py_init;
 }
 
 
@@ -77,7 +49,32 @@ pub fn compute_scalogram(
     n_scales: u32, 
     beta: f32, 
     gamma: f32
-) -> Option<ScalogramResult>
+) -> Result<ScalogramResult>
 {
-    todo!();
+    return Python::attach(|py| -> Result<ScalogramResult> {
+        // Setting up the scalogram plotting call
+        let morse_wavelet = PyModule::import(py, "morse_wavelet").context("importing morse_wavelet")?;
+        let input_signal = PyArray1::from_slice(py, audio_signal);
+        let kwargs = PyDict::new(py);
+        kwargs.set_item("f_min", f_min)?;
+        kwargs.set_item("f_max", f_max)?;
+        kwargs.set_item("n_scales", n_scales)?;
+        kwargs.set_item("beta", beta)?;
+        kwargs.set_item("gamma", gamma)?;
+        kwargs.set_item("title", "Audio Scalogram")?;
+        kwargs.set_item("return_bytes", true)?;
+        
+        let result = morse_wavelet.getattr("scalogram")?
+            .call((input_signal, sr), Some(&kwargs))
+            .context("Computing scalogram")?;
+        
+        let (img, wt, ht): (Vec<u8>, u32, u32) = result.extract().context("Extracting result")?;
+
+        return Ok(ScalogramResult {
+            image: img,
+            width: wt,
+            height: ht
+        });
+    });
 }
+

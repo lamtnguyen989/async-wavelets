@@ -5,6 +5,7 @@ use axum::extract::{DefaultBodyLimit, Multipart};
 
 
 const MAX_UPLOAD_BYTES: usize = 5 * 1024 * 1024;  // 5 MB
+const MAX_GRPC_MESSAGE_BYTES: usize = 16 * 1024 * 1024; // 16
 const PORT: &str = "7777";
 
 #[tokio::main]
