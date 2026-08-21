@@ -13,7 +13,7 @@ use crate::pb::processing_service_server::ProcessingService;
 const MAX_UPLOAD_MB: usize = 5;
 const MAX_UPLOAD_BYTES: usize = MAX_UPLOAD_MB * 1024 * 1024;
 
-/// Struct storing scalogram result data in Row-major layout: [n_scales x n_time]
+/// Struct storing scalogram result image
 pub struct ScalogramResult {
     pub image: Vec<u8>,
     pub width: u32,
@@ -30,7 +30,7 @@ pub fn init_wavelet_python_module(python_src_dir: &str) -> Result<()>
         let dir_query = sys_path.call_method1("__contains__", (python_src_dir,))?;
         let dir_present: bool = dir_query.extract()?;
         if !dir_present {
-            sys_path.call_method1("insert", (python_src_dir, ))?;
+            sys_path.call_method1("insert", (0, python_src_dir))?;
         }
 
         // Import the Morse Wavelet module (probably need to incorporate more wavelets in the future)
@@ -119,7 +119,7 @@ impl ProcessingService for WaveletServer {
         // Launching the JAX compute task
         let f_max = (sr as f32 / 2.0).min(15000.0);
         let f_min = 20.0;
-        let n_scales = 64;
+        let n_scales = 128;
         let (beta, gamma) = (3.0, 20.0);
 
         let compute_result = tokio::task::spawn_blocking(move || {

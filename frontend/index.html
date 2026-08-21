@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wavelet Scalogram Engine</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<main>
+  <section class="hero">
+    <h1>Audio wavelet scalogram plotter.</h1>
+    <p class="lede">
+        Currently based on Morse Wavelet.
+    </p>
+
+    <div class="upload-panel">
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload an audio file">
+        <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac" hidden />
+
+        <div class="dropzone-content">
+          <p class="dz-title" id="dz-title">Drag an audio file here, or click to choose one</p>
+          <p class="dz-sub" id="dz-sub">MP3, WAV or FLAC &middot; 5MB max</p>
+          <p class="dz-file" id="dz-file" hidden></p>
+        </div>
+      </div>
+
+      <button type="button" id="analyze-btn" disabled>Analyze audio</button>
+    </div>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="output" id="output" hidden aria-label="Scalogram result">
+    <div class="readout" id="readout"></div>
+    <img id="scalogram-img" alt="Scalogram of the uploaded audio" />
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/protobufjs/7.2.5/protobuf.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
