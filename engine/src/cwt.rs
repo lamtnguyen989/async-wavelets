@@ -3,6 +3,15 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict};
 use numpy::PyArray1;
 
+use tonic::{Request, Response, Status};
+
+use crate::audio::{decode_audio, DecodeError};
+use crate::pb::{AudioUploadRequest, WaveletResult};
+use crate::pb::processing_service_server::ProcessingService;
+
+/// File upload limit
+const MAX_UPLOAD_MB: usize = 5;
+const MAX_UPLOAD_BYTES: usize = MAX_UPLOAD_MB * 1024 * 1024;
 
 /// Struct storing scalogram result data in Row-major layout: [n_scales x n_time]
 pub struct ScalogramResult {
@@ -73,3 +82,60 @@ pub fn compute_scalogram(
     });
 }
 
+pub struct WaveletServer;
+
+#[tonic::async_trait]
+impl ProcessingService for WaveletServer {
+    async fn process_audio(&self, request: Request<AudioUploadRequest>) -> Result<Response<WaveletResult>, Status> {
+        // Pre-processing incoming audio data
+        let req = request.into_inner();
+
+        if req.audio_data.is_empty() {
+            return Err(Status::invalid_argument("No audio data recieved!"));
+        }
+
+        if req.audio_data.len() > MAX_UPLOAD_BYTES {
+            return Err(Status::invalid_argument(
+                format!("Audio file too large! Max size is {} bytes, recieved {} bytes", MAX_UPLOAD_BYTES, req.audio_data.len())
+            ));
+        }
+
+        // Decode the audio
+        let decoded_audio = tokio::task::spawn_blocking(move || decode_audio(req.audio_data)).await
+            .map_err(|e| Status::internal(format!("Audio decoding task panicked: {e}")))?
+            .map_err(|err| {
+                match err {
+                    DecodeError::UnrecognizedFormat(_) | DecodeError::UnsupportedCodec(_)   => Status::invalid_argument(err.to_string()),
+                    DecodeError::NoAudioTrack | DecodeError::EmptyAudio                     => Status::invalid_argument(err.to_string()),
+                    DecodeError::UnknownSampleRate | DecodeError::Demux(_) | DecodeError::Decode(_) => Status::internal(err.to_string()),
+                }
+            })?;
+        
+        // Pulling metadata from decoded audio
+        let n_samples = decoded_audio.samples.len() as u32;
+        let sr = decoded_audio.sample_rate;
+        let codec = decoded_audio.codec.to_string();
+        
+        // Launching the JAX compute task
+        let f_max = (sr as f32 / 2.0).min(15000.0);
+        let f_min = 20.0;
+        let n_scales = 64;
+        let (beta, gamma) = (3.0, 20.0);
+
+        let compute_result = tokio::task::spawn_blocking(move || {
+            compute_scalogram(&decoded_audio.samples, sr, f_min, f_max, n_scales, beta, gamma)
+        }).await
+        .map_err(|e| Status::internal(format!("Scalogram task panicked: {e}")))?
+        .map_err(|e| Status::internal(format!("Scalogram computation failed: {e:#}")))?;
+
+        return Ok(Response::new(WaveletResult {
+            image:          compute_result.image,
+            sample_rate:    sr,
+            n_samples:      n_samples,
+            codec:          codec,
+            width:          compute_result.width,
+            height:         compute_result.height,
+            error:          String::new(),
+        }));
+    }
+}
