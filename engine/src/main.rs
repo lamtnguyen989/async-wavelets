@@ -1,7 +1,6 @@
 mod audio;
 mod cwt;
 
-use axum::extract::{DefaultBodyLimit, Multipart};
 
 
 const MAX_UPLOAD_BYTES: usize = 5 * 1024 * 1024;  // 5 MB
@@ -18,7 +17,7 @@ async fn main() -> anyhow::Result<()>
 
     // Making sure we can embed the Python interpreter
     tracing::info!("initializing embedded Python interpreter...");
-    pyo3::Python::attach(|py| {
+    pyo3::Python::attach(|_py| {
         let version = pyo3::Python::version_str();
         tracing::info!(python_version = %version, "embedded Python interpreter ready!");
     });
