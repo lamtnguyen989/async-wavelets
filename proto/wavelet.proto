@@ -1,0 +1,24 @@
+syntax = "proto3";
+package wavelet;
+
+// Audio request from user 
+message AudioUploadRequest {
+    bytes audio_data = 1;
+    string name = 2;
+}
+
+// The computed scalogram result (and metadata, error) to be returned from the JAX engine
+message WaveletResult {
+    bytes image = 1;
+    uint32 sample_rate = 2;
+    uint32 n_samples = 3;
+    string codec = 4;
+    uint32 width = 5;
+    uint32 height = 6;
+    string error = 7;
+}
+
+// Processing service
+service ProcessingService {
+    rpc ProcessAudio(AudioUploadRequest) returns (WaveletResult);
+}

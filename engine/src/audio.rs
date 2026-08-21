@@ -5,7 +5,7 @@ use std::{hint, todo};
 
 use symphonia::core::errors::Error::ResetRequired;
 use symphonia::core::audio::GenericAudioBufferRef;
-use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions, CODEC_ID_NULL_AUDIO};
+use symphonia::core::codecs::audio::{AudioCodecId, AudioDecoder, AudioDecoderOptions, CODEC_ID_NULL_AUDIO};
 use symphonia::core::codecs::registry::CodecRegistry;
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::errors::Error as SymphoniaError;
@@ -47,7 +47,7 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
     let mss = MediaSourceStream::new(Box::new(cursor), mss_options);
 
     // Probing the input
-    let mut probe = Probe::default();
+    let mut probe = symphonia::default::get_probe();
     let hint = Hint::new();
     let meta_opts = MetadataOptions::default();
     let format_opts = FormatOptions::default();
@@ -76,7 +76,7 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
         .unwrap_or(1);
 
     // Initialize the codec (decoder)
-    let codec_registry = CodecRegistry::new();
+    let codec_registry = symphonia::default::get_codecs();
     let decoder_opts = AudioDecoderOptions::default();
     let mut decoder = codec_registry
         .make_audio_decoder(&audio_params, &decoder_opts)
@@ -103,7 +103,7 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
         match decoder.decode(&packet) {
             Ok(decoded) => {
                 decoded.copy_to_vec_interleaved(&mut interleaved_buffer);
-                append_mono_dowmixed(&interleaved_buffer, n_channels, &mut mono_samples);
+                append_mono_dowmixed(&interleaved_buffer, decoded.spec().channels().count(), &mut mono_samples);
             }
             Err(SymphoniaError::DecodeError(_)) => continue, // Currently skip corrupt/undecodable packets
             Err(e) => return Err(DecodeError::Decode(e.to_string())),
@@ -122,11 +122,11 @@ pub fn decode_audio(bytes: Vec<u8>) -> Result<DecodedAudio, DecodeError> {
     });
 }
 
-fn append_mono_dowmixed(interleaved_buff: &[f32], channels: u16, out: &mut Vec<f32>) {
+fn append_mono_dowmixed(interleaved_buff: &[f32], channels: usize, out: &mut Vec<f32>) {
     match channels {
         1 => out.extend_from_slice(interleaved_buff),
         _ => {
-            for frame in interleaved_buff.chunks_exact(channels as usize) {
+            for frame in interleaved_buff.chunks_exact(channels) {
                 let avg_of_packet = frame.iter().sum::<f32>() / channels as f32;
                 out.push(avg_of_packet);
             }

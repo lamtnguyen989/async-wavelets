@@ -1,10 +1,12 @@
 mod audio;
 mod cwt;
 
-use axum::extract::{DefaultBodyLimit, Multipart};
+pub mod pb {
+    tonic::include_proto!("wavelet");
+}
 
 
-const MAX_UPLOAD_BYTES: usize = 40 * 1024 * 1024;  // 40 MB
+const MAX_GRPC_MESSAGE_BYTES: usize = 16 * 1024 * 1024; // 16
 const PORT: &str = "7777";
 
 #[tokio::main]
@@ -17,7 +19,7 @@ async fn main() -> anyhow::Result<()>
 
     // Making sure we can embed the Python interpreter
     tracing::info!("initializing embedded Python interpreter...");
-    pyo3::Python::attach(|py| {
+    pyo3::Python::attach(|_py| {
         let version = pyo3::Python::version_str();
         tracing::info!(python_version = %version, "embedded Python interpreter ready!");
     });

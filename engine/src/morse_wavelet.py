@@ -1,5 +1,6 @@
 from functools import partial
 import os
+import io
 
 import jax
 import jax.numpy as jnp
@@ -111,8 +112,16 @@ def scalogram(
     fig.colorbar(im, ax=ax, label="|W|")
     fig.tight_layout()
 
+    if return_bytes:
+        dpi = 250
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=dpi)
+        width_px, height_px = fig.get_size_inches() * dpi
+        plt.close(fig)
+        return buf.getvalue(), int(width_px), int(height_px)
+
     if out_path:
-        plt.savefig(out_path, dpi=150)
+        plt.savefig(out_path, dpi=250)
         plt.close(fig)
     else:
         plt.show()
