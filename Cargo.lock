@@ -147,14 +147,13 @@ dependencies = [
  "numpy",
  "prost",
  "pyo3",
- "serde",
- "serde_json",
  "symphonia",
  "thiserror",
  "tokio",
  "tonic",
  "tonic-prost",
  "tonic-prost-build",
+ "tonic-web",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -979,7 +978,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
- "serde_derive",
 ]
 
 [[package]]
@@ -1434,6 +1432,24 @@ dependencies = [
  "syn 2.0.119",
  "tempfile",
  "tonic-build",
+]
+
+[[package]]
+name = "tonic-web"
+version = "0.14.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5e6a1b6319ca4b61a4c0f0c94d439c8f3ed344cca56fe0df40e1fe4be11380b"
+dependencies = [
+ "base64",
+ "bytes",
+ "http",
+ "http-body",
+ "pin-project",
+ "tokio-stream",
+ "tonic",
+ "tower-layer",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]
