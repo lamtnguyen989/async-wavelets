@@ -119,10 +119,6 @@ def scalogram(
         width_px, height_px = fig.get_size_inches() * dpi
         plt.close(fig)
         return buf.getvalue(), int(width_px), int(height_px)
-
-    if out_path:
-        plt.savefig(out_path, dpi=250)
-        plt.close(fig)
     else:
         plt.show()
 
